@@ -25,6 +25,30 @@ def get_all_data(urls):
 
     return results
 
+def get_pokemon_evolution_chain(pokemon_name):
+    url = f"https://pokeapi.co/api/v2/pokemon-species/{pokemon_name}"
+    response = requests.get(url)
+    if response.status_code == 200:
+        species_data = response.json()
+        evolution_chain_url = species_data["evolution_chain"]["url"]
+        return evolution_chain_url
+    else:
+        return None
+
+def get_evolution_chain_details(evolution_chain_url):
+    response = requests.get(evolution_chain_url)
+    if response.status_code == 200:
+        evolution_chain_data = response.json()
+        return evolution_chain_data
+    else:
+        return None
+    
+def print_chain(chain, level=0):
+    print("  " * level + "- " + chain["species"]["name"].capitalize())
+    if chain["evolves_to"]:
+        for evolve in chain["evolves_to"]:
+            print_chain(evolve, level + 1)
+
 
 def main():
     print("Welcome to the Pokemon List Generator Program!")
@@ -34,16 +58,29 @@ def main():
     while userResponse != 3:
 
         if userResponse == 1: #generate list
-            print("What are the specs of you list? ")
+            print("What are the specs of your list? ")
             sortBy = input("  Evolution of a specific pokemon, generation, or type (evolution/generation/type) ")
             if sortBy == "evolution": #evolution of specific pokemon
-                # pokemon = input("What pokemon do you want to see the evolutions of? ")
                 # get_all_data(evolution-chain)
-                response = requests.get("https://pokeapi.co/api/v2/evolution-chain/7/")
-                if response.status_code == 200:
-                    print(response.json()['chain', 'evolves_to'])
+                # response = requests.get("https://pokeapi.co/api/v2/evolution-chain/7/")
+                # if response.status_code == 200:
+                #     print(response.json()['chain', 'evolves_to'])
+
+                pokemon_name = input("What pokemon do you want to see the evolutions of? ")
+                evolution_chain_url = get_pokemon_evolution_chain(pokemon_name)
+                if evolution_chain_url:
+                    evolution_chain_data = get_evolution_chain_details(evolution_chain_url)
+                    if evolution_chain_data:
+                        chain = evolution_chain_data["chain"]
+                        print(f"{pokemon_name.capitalize()} evolves into:")
+                        print_chain(chain)
+                    else:
+                        print("Failed to get evolution chain details.")
+                else:
+                    print("Failed to get species data.")    
             elif sortBy == "generation": #generation
                 generation = input("What generation do you want to generate a list of? ")
+
                 print("Here's the first 20")
                 more = input("Do you want to print the next 20? (y/n) ")
                 if more == "y":
@@ -87,3 +124,7 @@ if __name__ == "__main__":
     # as many pokemon they know and program tests to see if correct
     # or not and shows them which ones they got right
 # maybe add a two player mode of testing knowledge for who can get the most
+
+# TO DO
+# add in generation and types for generating pokemon lists
+# add the game for players to test their knowledge
